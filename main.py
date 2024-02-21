@@ -4,6 +4,7 @@ import re
 
 
 def read_csv():
+    '''Функция читает исходный csv файл, передает данные в sort_data.'''
     with open('phonebook/phonebook_raw.csv', encoding='utf-8') as f:
         rows = csv.reader(f, delimiter=',')
         contacts_list = list(rows)
@@ -11,6 +12,7 @@ def read_csv():
 
 
 def sort_data(contacts_list):
+    '''Функция перерабатывает ФИО и отправляет на переработку телефон.'''
     sorted_phonebook = []
     for contact in contacts_list:
         full_name = (contact[0].split(' ') +
@@ -38,6 +40,7 @@ def sort_data(contacts_list):
 
 
 def use_regular_expressions(phone):
+    '''Функция перерабатывает номер телефона и возвращает корректный.'''
     pattern_compiled = re.compile(r"(\+7|8)?\s*\(*(\d{3})\)*[-\s]*"
                                   r"(\d{3})[-\s]*(\d{2})[-\s]*(\d{2})"
                                   r"*(\s*)\(*(\w*\.*)\s*(\d{4})*\)*\s*")
@@ -46,29 +49,24 @@ def use_regular_expressions(phone):
     return result
 
 
-def create_new_phonebook(sorted_phonebook):
+def create_new_phonebook(sorted_old_phonebook):
+    '''Функция убирает задвоенность и создает новый список с данными.'''
+    new_phonebook_list = []
+    small_phonebook_list = []
     names_dict = {}
+    reverse_names_dict = {}
     count_n = 0
-    rev_names_dict = {}
-    list_sort_1 = []
-    for book_1 in sorted_phonebook:
+    for one_book in sorted_old_phonebook:
         count_n += 1
-        check = book_1[0] + book_1[1]
+        check = one_book[0] + one_book[1]
         names_dict[count_n] = check
     for key, value in names_dict.items():
-        rev_names_dict.setdefault(value, set()).add(key)
+        reverse_names_dict.setdefault(value, set()).add(key)
     repetition_list = [values for key, values in
-                       rev_names_dict.items() if len(values) > 1]
+                       reverse_names_dict.items() if len(values) > 1]
     new_set = set()
-    for num_s, list_sort in enumerate(sorted_phonebook, 1):
-        if num_s in new_set:
-            pass
-        elif num_s not in new_set:
-            list_sort_1.append(list_sort)
-        else:
-            print('Что-то пошло не по плану.')
-    for repetition in repetition_list:
-        new_set = new_set | repetition
+    for repetitions in repetition_list:
+        new_set = new_set | repetitions
         new_dict = {
             'lastname': '',
             'firstname': '',
@@ -78,33 +76,42 @@ def create_new_phonebook(sorted_phonebook):
             'phone': '',
             'email': ''
         }
-        for rep in repetition:
+        for rep in repetitions:
             if len(new_dict['lastname']) == 0:
-                new_dict['lastname'] = sorted_phonebook[rep - 1][0]
+                new_dict['lastname'] = sorted_old_phonebook[rep - 1][0]
             if len(new_dict['firstname']) == 0:
-                new_dict['firstname'] = sorted_phonebook[rep - 1][1]
+                new_dict['firstname'] = sorted_old_phonebook[rep - 1][1]
             if len(new_dict['surname']) == 0:
-                new_dict['surname'] = sorted_phonebook[rep - 1][2]
+                new_dict['surname'] = sorted_old_phonebook[rep - 1][2]
             if len(new_dict['organization']) == 0:
-                new_dict['organization'] = sorted_phonebook[rep - 1][3]
+                new_dict['organization'] = sorted_old_phonebook[rep - 1][3]
             if len(new_dict['position']) == 0:
-                new_dict['position'] = sorted_phonebook[rep - 1][4]
+                new_dict['position'] = sorted_old_phonebook[rep - 1][4]
             if len(new_dict['phone']) == 0:
-                new_dict['phone'] = sorted_phonebook[rep - 1][5]
+                new_dict['phone'] = sorted_old_phonebook[rep - 1][5]
             if len(new_dict['email']) == 0:
-                new_dict['email'] = sorted_phonebook[rep - 1][6]
-        new_21213_list = []
-        for val_13123 in new_dict.values():
-            new_21213_list.append(val_13123)
-        list_sort_1.append(new_21213_list)
-    return write_csv(list_sort_1)
+                new_dict['email'] = sorted_old_phonebook[rep - 1][6]
+        small_list = []
+        for value in new_dict.values():
+            small_list.append(value)
+        small_phonebook_list.append(small_list)
+    for num_s, list_sort in enumerate(sorted_old_phonebook, 1):
+        if num_s in new_set:
+            pass
+        elif num_s not in new_set:
+            new_phonebook_list.append(list_sort)
+        else:
+            print('Что-то пошло не по плану.')
+    new_phonebook_list.extend(small_phonebook_list)
+    return write_csv(new_phonebook_list)
 
 
-def write_csv(list_list):
+def write_csv(sort_list):
+    '''ФФункция создает новый csv файл.'''
     with open('phonebook/phonebook.csv', 'w',
               newline='', encoding='utf-8') as f:
         datawriter = csv.writer(f, delimiter=',')
-        datawriter.writerows(list_list)
+        datawriter.writerows(sort_list)
         print('Завершено.')
 
 
